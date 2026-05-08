@@ -1,0 +1,873 @@
+{
+  "info": {
+    "_postman_id": "8e48602c-c35e-4507-9162-f3c08d06adc1",
+    "name": "Restful Booker — Hotel Booking API Test Suite",
+    "description": "Complete API test collection for ShopNest E-Commerce platform using Restful Booker API.\nPrepared by: Abdul Hannan — SQA Engineer\nVersion: v1.0\nEnvironment: Restful Booker (https://restful-booker.herokuapp.com)\n\nModules Covered:\n1. Health Check\n2. Authentication\n3. Booking — GET Operations\n4. Booking — POST/PUT/PATCH Operations\n5. Negative / Edge Case Testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "49866668",
+    "_collection_link": "https://go.postman.co/collection/49866668-8e48602c-c35e-4507-9162-f3c08d06adc1?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "01 — Health Check",
+      "item": [
+        {
+          "name": "TC-001 — API Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-001: Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('TC-001: Response time is less than 5000ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});",
+                  "",
+                  "pm.test('TC-001: API is alive and responding', function () {",
+                  "    pm.response.to.not.be.error;",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/booking",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "Verifies the API is live and responding. A successful response confirms the Restful Booker staging environment is healthy and ready for testing."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 — Authentication",
+      "item": [
+        {
+          "name": "TC-002 — Generate Auth Token (Valid Credentials)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-002: Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('TC-002: Response contains token', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('token');",
+                  "    pm.expect(jsonData.token).to.not.be.empty;",
+                  "});",
+                  "",
+                  "pm.test('TC-002: Token is a string', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.token).to.be.a('string');",
+                  "});",
+                  "",
+                  "pm.test('TC-002: Response time is less than 3000ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});",
+                  "",
+                  "// Save token to environment variable",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.environment.set('token', jsonData.token);",
+                  "    console.log('Token saved: ' + jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"admin\",\n    \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth"
+              ]
+            },
+            "description": "Authenticates with valid admin credentials and retrieves a token. The token is automatically saved to the environment variable for use in subsequent secure requests."
+          },
+          "response": []
+        },
+        {
+          "name": "TC-003 — Generate Auth Token (Invalid Credentials)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-003: Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('TC-003: Response returns bad credentials message', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.reason).to.eql('Bad credentials');",
+                  "});",
+                  "",
+                  "pm.test('TC-003: No token returned for invalid credentials', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.not.have.property('token');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"wronguser\",\n    \"password\": \"wrongpassword\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth"
+              ]
+            },
+            "description": "Negative test — attempts authentication with invalid credentials. Verifies the API returns a bad credentials message and does not issue a token."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 — Booking GET Operations",
+      "item": [
+        {
+          "name": "TC-004 — Get All Bookings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-004: Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('TC-004: Response is an array', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('TC-004: Array contains at least one booking', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.length).to.be.above(0);",
+                  "});",
+                  "",
+                  "pm.test('TC-004: Each booking has a bookingid field', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    jsonData.forEach(function(booking) {",
+                  "        pm.expect(booking).to.have.property('bookingid');",
+                  "    });",
+                  "});",
+                  "",
+                  "pm.test('TC-004: Response time is less than 5000ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});",
+                  "",
+                  "// Save first booking ID for later use",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.length > 0) {",
+                  "    pm.environment.set('booking_id', jsonData[0].bookingid);",
+                  "    console.log('Booking ID saved: ' + jsonData[0].bookingid);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/booking",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "Retrieves all booking IDs from the system. Validates response structure, array format, and saves the first booking ID to environment variable for use in subsequent tests."
+          },
+          "response": []
+        },
+        {
+          "name": "TC-005 — Get Booking by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-005: Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('TC-005: Response contains firstname', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('firstname');",
+                  "});",
+                  "",
+                  "pm.test('TC-005: Response contains lastname', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('lastname');",
+                  "});",
+                  "",
+                  "pm.test('TC-005: Response contains totalprice', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('totalprice');",
+                  "    pm.expect(jsonData.totalprice).to.be.a('number');",
+                  "});",
+                  "",
+                  "pm.test('TC-005: Response contains bookingdates', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('bookingdates');",
+                  "    pm.expect(jsonData.bookingdates).to.have.property('checkin');",
+                  "    pm.expect(jsonData.bookingdates).to.have.property('checkout');",
+                  "});",
+                  "",
+                  "pm.test('TC-005: Response content type is JSON', function () {",
+                  "    pm.response.to.have.header('Content-Type');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/booking/{{booking_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "booking",
+                "{{booking_id}}"
+              ]
+            },
+            "description": "Retrieves a single booking by ID saved from TC-004. Validates all required fields including firstname, lastname, totalprice, depositpaid, and bookingdates."
+          },
+          "response": []
+        },
+        {
+          "name": "TC-006 — Get Booking by First Name Filter",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-006: Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('TC-006: Response is an array', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('TC-006: Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/booking?firstname=Sally",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "booking"
+              ],
+              "query": [
+                {
+                  "key": "firstname",
+                  "value": "Sally"
+                }
+              ]
+            },
+            "description": "Filters bookings by firstname query parameter. Validates that the API returns an array of matching bookings."
+          },
+          "response": []
+        },
+        {
+          "name": "TC-007 — Get Booking by Check-in Date Filter",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-007: Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('TC-007: Response is an array', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('TC-007: Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/booking?checkin=2024-01-01",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "booking"
+              ],
+              "query": [
+                {
+                  "key": "checkin",
+                  "value": "2024-01-01"
+                }
+              ]
+            },
+            "description": "Filters bookings by check-in date query parameter. Validates that the API correctly filters results by date."
+          },
+          "response": []
+        },
+        {
+          "name": "TC-008 — Get Booking Invalid ID (Negative)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-008: Status code is 404 for invalid booking ID', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('TC-008: Response confirms booking not found', function () {",
+                  "    pm.expect(pm.response.text()).to.include('Not Found');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/booking/999999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "booking",
+                "999999"
+              ]
+            },
+            "description": "Negative test — attempts to retrieve a booking with an ID that does not exist. Validates that the API returns 404 Not Found."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 — Booking POST / PUT / PATCH Operations",
+      "item": [
+        {
+          "name": "TC-009 — Create New Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-009: Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('TC-009: Response contains bookingid', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('bookingid');",
+                  "    pm.expect(jsonData.bookingid).to.be.a('number');",
+                  "});",
+                  "",
+                  "pm.test('TC-009: Booking firstname matches request', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.booking.firstname).to.eql('Abdul');",
+                  "});",
+                  "",
+                  "pm.test('TC-009: Booking lastname matches request', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.booking.lastname).to.eql('Hannan');",
+                  "});",
+                  "",
+                  "pm.test('TC-009: Booking totalprice matches request', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.booking.totalprice).to.eql(250);",
+                  "});",
+                  "",
+                  "pm.test('TC-009: depositpaid is true', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.booking.depositpaid).to.be.true;",
+                  "});",
+                  "",
+                  "// Save new booking ID for update and delete tests",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set('new_booking_id', jsonData.bookingid);",
+                  "console.log('New booking ID saved: ' + jsonData.bookingid);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstname\": \"Abdul\",\n    \"lastname\": \"Hannan\",\n    \"totalprice\": 250,\n    \"depositpaid\": true,\n    \"bookingdates\": {\n        \"checkin\": \"2025-06-01\",\n        \"checkout\": \"2025-06-07\"\n    },\n    \"additionalneeds\": \"Breakfast\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/booking",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "Creates a new booking with complete valid data. Validates response structure, confirms all fields match the request payload, and saves the new booking ID for update and delete operations."
+          },
+          "response": []
+        },
+        {
+          "name": "TC-010 — Create Booking Missing Required Fields (Negative)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-010: Status code is 500 for missing required fields', function () {",
+                  "    pm.response.to.have.status(500);",
+                  "});",
+                  "",
+                  "pm.test('TC-010: API rejects incomplete booking data', function () {",
+                  "    pm.response.to.not.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstname\": \"Abdul\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/booking",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "booking"
+              ]
+            },
+            "description": "Negative test — attempts to create a booking with missing required fields. Validates that the API rejects incomplete data and returns an error response."
+          },
+          "response": []
+        },
+        {
+          "name": "TC-011 — Full Update Booking (PUT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-011: Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('TC-011: Updated firstname matches', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.firstname).to.eql('Abdul');",
+                  "});",
+                  "",
+                  "pm.test('TC-011: Updated lastname matches', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.lastname).to.eql('Hannan');",
+                  "});",
+                  "",
+                  "pm.test('TC-011: Updated totalprice matches', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.totalprice).to.eql(350);",
+                  "});",
+                  "",
+                  "pm.test('TC-011: Updated additionalneeds matches', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.additionalneeds).to.eql('Breakfast and Lunch');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstname\": \"Abdul\",\n    \"lastname\": \"Hannan\",\n    \"totalprice\": 350,\n    \"depositpaid\": true,\n    \"bookingdates\": {\n        \"checkin\": \"2025-06-01\",\n        \"checkout\": \"2025-06-10\"\n    },\n    \"additionalneeds\": \"Breakfast and Lunch\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/booking/{{new_booking_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "booking",
+                "{{new_booking_id}}"
+              ]
+            },
+            "description": "Performs a full PUT update on the booking created in TC-009. Replaces all fields and validates the response reflects the updated values. Uses auth token from TC-002."
+          },
+          "response": []
+        },
+        {
+          "name": "TC-012 — Partial Update Booking (PATCH)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-012: Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('TC-012: Patched firstname matches', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.firstname).to.eql('James');",
+                  "});",
+                  "",
+                  "pm.test('TC-012: Patched totalprice matches', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.totalprice).to.eql(500);",
+                  "});",
+                  "",
+                  "pm.test('TC-012: Response contains all booking fields', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('firstname');",
+                  "    pm.expect(jsonData).to.have.property('lastname');",
+                  "    pm.expect(jsonData).to.have.property('totalprice');",
+                  "    pm.expect(jsonData).to.have.property('bookingdates');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"firstname\": \"James\",\n    \"totalprice\": 500\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/booking/{{new_booking_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "booking",
+                "{{new_booking_id}}"
+              ]
+            },
+            "description": "Performs a partial PATCH update — only updates firstname and totalprice. Validates that only the specified fields changed while other fields remain intact."
+          },
+          "response": []
+        },
+        {
+          "name": "TC-013 — Delete Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-013: Status code is 201 for successful deletion', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('TC-013: Response confirms deletion', function () {",
+                  "    pm.expect(pm.response.text()).to.include('Created');",
+                  "});",
+                  "",
+                  "pm.test('TC-013: Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Cookie",
+                "value": "token={{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/booking/{{new_booking_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "booking",
+                "{{new_booking_id}}"
+              ]
+            },
+            "description": "Deletes the booking created in TC-009. Uses auth token from TC-002. Validates that the API returns 201 Created as confirmation of successful deletion."
+          },
+          "response": []
+        },
+        {
+          "name": "TC-014 — Verify Booking Deleted",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-014: Status code is 404 — booking no longer exists', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('TC-014: Deleted booking cannot be retrieved', function () {",
+                  "    pm.expect(pm.response.text()).to.include('Not Found');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/booking/{{new_booking_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "booking",
+                "{{new_booking_id}}"
+              ]
+            },
+            "description": "Verifies that the booking deleted in TC-013 no longer exists. Confirms end-to-end delete flow by checking that a 404 is returned for the deleted booking ID."
+          },
+          "response": []
+        },
+        {
+          "name": "TC-015 — Delete Booking Without Token (Negative)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-015: Status code is 403 without auth token', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "pm.test('TC-015: Unauthorized deletion is rejected', function () {",
+                  "    pm.expect(pm.response.text()).to.include('Forbidden');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/booking/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "booking",
+                "1"
+              ]
+            },
+            "description": "Negative security test — attempts to delete a booking without providing an auth token. Validates that the API correctly rejects unauthorized deletion requests with 403 Forbidden."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "New Request",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://restful-booker.herokuapp.com"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "booking_id",
+      "value": ""
+    },
+    {
+      "key": "new_booking_id",
+      "value": ""
+    }
+  ]
+}
